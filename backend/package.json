@@ -1,20 +1,20 @@
-
 {
   "name": "backend",
   "version": "1.0.0",
-"type": "module",
+  "type": "module",
   "description": "",
   "main": "index.js",
-  "type": "module",
-"scripts": {
+  "scripts": {
     "start": "node server.js"
-  },  "keywords": [],
+  },
+  "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@google/genai": "^2.10.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "winston": "^3.19.0"
   }
 }

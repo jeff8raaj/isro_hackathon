@@ -1,0 +1,4 @@
+node_modules/
+backend/node_modules/
+satellite-app/node_modules/
+.env

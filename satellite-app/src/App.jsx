@@ -67,7 +67,7 @@ Respond ONLY with valid JSON, no markdown, no extra text:
 {"questions":[{"level":"Beginner","question":"...","application":"...","hint":"..."},...]}`;
 
     try {
-      const res = await fetch("http://192.168.0.107:5000/api/generate-questions", {
+      const res = await fetch("https://isrohackathon-production.up.railway.app/api/generate-questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
@@ -75,8 +75,7 @@ Respond ONLY with valid JSON, no markdown, no extra text:
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData?.error?.message || `HTTP ${res.status}`);
-      }
+        throw new Error(errData?.error?.message || `HTTP ${res.status}`);      }
 
       const data = await res.json();
       const raw = data.content?.map((c) => c.text || "").join("") || "";
