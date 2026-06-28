@@ -1,0 +1,21 @@
+{
+  "name": "isro_hackathon",
+  "version": "1.0.0",
+  "description": "An advanced remote sensing and deep learning pipeline designed to harmonize multi-sensor satellite imagery, mask atmospheric interference, and reconstruct obscured ground terrain using a Conditional Generative Adversarial Network (cGAN / U-Net) architecture.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeff8raaj/isro_hackathon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jeff8raaj/isro_hackathon/issues"
+  },
+  "homepage": "https://github.com/jeff8raaj/isro_hackathon#readme"
+}
