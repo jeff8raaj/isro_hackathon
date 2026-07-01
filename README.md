@@ -1,34 +1,168 @@
-# GeoAI Satellite Cloud Removal Pipeline
+# Generative AI-Based Cloud Removal and Reconstruction for LISS-IV Satellite Imagery
 
-An advanced remote sensing and deep learning pipeline designed to harmonize multi-sensor satellite imagery, mask atmospheric interference, and reconstruct obscured ground terrain using a Conditional Generative Adversarial Network (cGAN / U-Net) architecture.
+**ISRO Bharatiya Antariksh Hackathon 2026**
 
-## 👥 Team Roles & Responsibilities
-
-* **Lead Data Engineer (ECE + AI):** Dataset Preprocessing, Image Enhancement Foundations, Automated Cloud/Shadow Masking, Repository Architecture.
-* **AI Developer (Software/AI):** Model Scaling, Advanced Deep Learning Training Loops, Optimization Routines.
-* **Validation & Interface Engineer (ECE Member 2):** Evaluation Metrics, Model Testing Suite, UI Dashboard Framework, Pitch Presentation.
+A deep learning framework for automated cloud removal and surface reconstruction in high-resolution LISS-IV satellite imagery using Generative AI and multi-modal remote sensing data.
 
 ---
 
-## 📂 Project Architecture
+## Overview
 
-```text
+Persistent cloud cover reduces the usability of optical satellite imagery for applications such as land use mapping, disaster monitoring, agriculture, and environmental assessment. This project develops a Generative AI-based framework that reconstructs cloud-covered regions while preserving spatial structures and spectral characteristics, producing analysis-ready imagery.
+
+---
+
+## Objectives
+
+- Develop an automated cloud removal framework for LISS-IV imagery.
+- Reconstruct cloud-covered regions using Generative AI.
+- Preserve spatial and spectral information.
+- Generate analysis-ready cloud-free imagery.
+- Evaluate reconstruction quality using standard remote sensing metrics.
+- Build a scalable workflow for operational deployment.
+
+---
+
+## System Architecture
+
+```
+Cloudy LISS-IV Image
+        │
+        ▼
+Cloud Detection & Mask Generation
+        │
+        ▼
+Image Preprocessing & Patch Extraction
+        │
+        ▼
+Generative AI Model (cGAN/U-Net)
+        │
+        ▼
+Multi-Modal Feature Fusion
+(Sentinel-1, Sentinel-2, DEM, Temporal Images)
+        │
+        ▼
+Cloud-Free Reconstruction
+        │
+        ▼
+Quality Evaluation
+(PSNR, SSIM, RMSE, SAM)
+```
+
+---
+
+## Repository Structure
+
+```
 isro_hackathon/
 │
-├── data/                       # Local raw assets and generated tensor binaries
-│   ├── dataset_patches/        # Cleanly sliced uniform image matrices (.npy)
-│   ├── generator_checkpoint.pth # Trained model weight parameters
-│   └── predicted_clean_patch.npy# Evaluated cloud-free reconstructed matrix
-│
-└── src/                        # Modular pipeline execution source code
-    ├── cloud_masking.py        # CV brightness segmentation and shadow dilation
-    ├── spatial_resample.py     # Bilinear interpolation geometric warping engine
-    ├── patch_maker.py          # Automated sliding-window array slicing
-    ├── dataset_loader.py       # Custom PyTorch Dataset and normalization class
-    ├── models.py               # Symmetrical U-Net with skip-connection layers
-    ├── train.py                # Adam optimization and MSE loss execution loop
-    └── inference.py            # Checkpoint loading and scene reconstruction
+├── data/
+├── src/
+├── models/
+├── outputs/
+├── notebooks/
+├── requirements.txt
+└── README.md
 
 
-    python3 src/cloud_masking.py
-    
+---
+
+## Technology Stack
+
+### Programming
+- Python
+
+### Deep Learning
+- PyTorch
+- cGAN
+- U-Net
+- Latent Diffusion Models (Future)
+- Vision Transformers (Future)
+
+### Geospatial
+- GDAL
+- Rasterio
+- QGIS
+- Google Earth Engine (Optional)
+
+### Image Processing
+- OpenCV
+- NumPy
+- Scikit-image
+- Albumentations
+
+---
+
+## Dataset
+
+### Primary Dataset
+
+- LISS-IV Satellite Imagery (Bhoonidhi)
+
+### Auxiliary Datasets
+
+- Sentinel-1 SAR
+- Sentinel-2 Optical Imagery
+- DEM
+- Temporal LISS-IV Imagery
+
+---
+
+## Evaluation Metrics
+
+Model performance is evaluated using:
+
+- Peak Signal-to-Noise Ratio (PSNR)
+- Structural Similarity Index (SSIM)
+- Root Mean Square Error (RMSE)
+- Spectral Angle Mapper (SAM)
+
+---
+
+## Current Implementation
+
+The current baseline includes:
+
+- Cloud mask generation
+- Patch-based preprocessing
+- cGAN/U-Net implementation
+- Model training pipeline
+- Inference pipeline
+- Quantitative evaluation
+
+---
+
+## Future Enhancements
+
+- Multi-modal data fusion
+- Latent Diffusion Models
+- Transformer-based feature fusion
+- Temporal image-guided reconstruction
+- Operational deployment pipeline
+
+---
+
+## Applications
+
+- Disaster Management
+- Agriculture
+- Land Use/Land Cover Mapping
+- Environmental Monitoring
+- Urban Planning
+- Infrastructure Assessment
+
+---
+
+## Team
+
+**Team Name:** *Your Team Name*
+
+- Sree Tharshan S
+- Jeffrin S Raaj
+- L Nibin Giovanni
+
+---
+
+## License
+
+Developed for the ISRO Bharatiya Antariksh Hackathon 2026.
