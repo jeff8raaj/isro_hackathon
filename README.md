@@ -166,3 +166,22 @@ The current baseline includes:
 ## License
 
 Developed for the ISRO Bharatiya Antariksh Hackathon 2026.
+
+# ISRO Hackathon - Model Deployment & Visualization
+
+This repository contains the trained generative model and visualization scripts for our project. Follow the steps below to set up the environment and verify the results.
+
+## 📦 Project Assets
+* `generator_checkpoint.pth` (24MB): The trained model weights.
+* `results_comparison.png`: The visual evaluation output.
+
+---
+
+## 🚀 Quick Start Guide
+
+Follow these steps in your terminal to set up the environment and run the visualization script:
+
+### Step 1: Activate the Virtual Environment
+Ensure you are in the project root directory, then run:
+```bash
+source venv/bin/activate
