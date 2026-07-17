@@ -1,0 +1,11 @@
+# ==========================================
+# Phase 2.6 - Multimodal Fusion & Transformers
+# ==========================================
+timm>=1.0.7
+transformers>=4.45.0
+diffusers>=0.30.0
+accelerate>=0.34.0
+wandb>=0.18.0
+earthengine-api>=1.1.0
+geemap>=0.35.0
+
