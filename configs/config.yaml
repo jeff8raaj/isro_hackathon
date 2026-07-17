@@ -1,0 +1,30 @@
+project:
+  name: "ISRO_Cloud_Removal_cGAN"
+  version: "1.0.0"
+
+data:
+  rice1_path: "datasets/rice1"
+  liss4_raw_path: "datasets/liss4/raw"
+  liss4_processed_path: "datasets/liss4/processed"
+  patch_size: 256
+  stride: 256
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+
+model:
+  generator: "unet"
+  discriminator: "patchgan"
+  input_nc: 3    # LISS-IV Bands: B2 (Green), B3 (Red), B4 (NIR)
+  output_nc: 3   # Reconstructed Target Bands
+  ngf: 64
+  ndf: 64
+
+training:
+  epochs: 100
+  batch_size: 16
+  lr_g: 0.0002
+  lr_d: 0.0002
+  beta1: 0.5
+  beta2: 0.999
+  lambda_L1: 100.0

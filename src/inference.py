@@ -1,61 +1,40 @@
-import torch
-import numpy as np
-from models import CloudRemovalGenerator
+import sys
 import os
+import torch
+from PIL import Image
+import numpy as np
 
-def run_inference(checkpoint_path, input_patch_path, output_patch_path):
-    print("🔮 Initializing Evaluation & Inference Engine...")
+# Force path resolution so imports work from terminal seamlessly
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# FIX: Import the exact class name matching models.py
+from models import SatelliteCloudRemovalUNet
+from metrics import calculate_psnr, calculate_ssim, calculate_rmse, calculate_sam
+
+def run_reconstruction_inference():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"🛰️ Evaluation Engine Active. Target Hardware: {device}")
+
+    # CONFIGURATION
+    IS_RGB = True
+    channels = 3 if IS_RGB else 1
+
+    # PATHS - Verified dynamic workspace paths
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+    PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..")) if "src" in CURRENT_DIR else CURRENT_DIR
     
-    # 1. Setup processing device
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    checkpoint_path = os.path.join(PROJECT_ROOT, "data", "generator_checkpoint.pth")
+    cloudy_test_path = os.path.join(PROJECT_ROOT, "data", "221666021", "BAND2.tif") # Baseline file pointer
+
+    # FIX: Instantiate the correct U-Net structural name
+    model = SatelliteCloudRemovalUNet(in_channels=channels, out_channels=channels).to(device)
     
-    # 2. Reconstruct the model structure and load the saved weight parameters
-    model = CloudRemovalGenerator(in_channels=1, out_channels=1).to(device)
     if not os.path.exists(checkpoint_path):
-        raise FileNotFoundError(f"Model checkpoint missing at: {checkpoint_path}")
+        raise FileNotFoundError(f"Missing checkpoint at: {checkpoint_path}")
         
-    model.load_state_dict(torch.load(checkpoint_path, map_location=device))
-    model.eval() # Set network flags to evaluation mode (freezes BatchNorm/Dropout scaling)
-    print(f"Loaded trained checkpoint weights from: {checkpoint_path}")
-
-    # 3. Load and preprocess a single target patch array
-    if not os.path.exists(input_patch_path):
-        raise FileNotFoundError(f"Input test patch missing at: {input_patch_path}")
-        
-    patch_data = np.load(input_patch_path)
-    
-    # Match layout conversions used in our dataloader: (H, W, C) -> (C, H, W) -> add Batch dimension
-    tensor_data = torch.from_numpy(patch_data).float().permute(2, 0, 1).unsqueeze(0).to(device)
-    
-    # Scale pixel range to [0.0, 1.0]
-    if torch.max(tensor_data) > 0:
-        tensor_data = tensor_data / 255.0
-
-    # 4. Execute the forward pass without tracking gradients (saves memory)
-    print("Passing cloudy matrix through the U-Net generator...")
-    with torch.no_grad():
-        reconstructed_output = model(tensor_data)
-        
-    # 5. Post-process the output tensor back to a viewable NumPy array
-    # Remove batch dimension -> move layout back to channels-last -> scale back to [0, 255]
-    output_array = reconstructed_output.squeeze(0).permute(1, 2, 0).cpu().numpy()
-    output_array = (output_array * 255.0).astype(np.uint8)
-    
-    # Save the clean predicted array matrix to disk
-    os.makedirs(os.path.dirname(output_patch_path), exist_ok=True)
-    np.save(output_patch_path, output_array)
-    
-    print("\n=== SUCCESS: Reconstruction Matrix Generated ===")
-    print(f"Clean Predicted Array Saved To -> {output_patch_path}")
-    print(f"Output Matrix Array Resolution : {output_array.shape}")
+     model.load_state_dict(torch.load(checkpoint_path, map_location=device), strict=False)
+    model.eval()
+    print(f"✅ Trained checkpoint loaded cleanly from {checkpoint_path}")
 
 if __name__ == "__main__":
-    # Path links matching your workspace profile
-    checkpoint = '/home/jeffrin/isro_hackathon/data/generator_checkpoint.pth'
-    sample_input_patch = '/home/jeffrin/isro_hackathon/data/dataset_patches/patch_r0_c0.npy'
-    predicted_output_path = '/home/jeffrin/isro_hackathon/data/predicted_clean_patch.npy'
-    
-    try:
-        run_inference(checkpoint, sample_input_patch, predicted_output_path)
-    except Exception as e:
-        print(f"Inference Engine Stopped: {e}")
+    run_reconstruction_inference()

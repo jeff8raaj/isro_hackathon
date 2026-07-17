@@ -1,94 +1,67 @@
 import torch
 import torch.nn as nn
 
-class UNetDownsample(nn.Module):
-    """Downsampling block: Convolution -> Batch Normalization -> LeakyReLU"""
+class ConvBlock(nn.Module):
+    """Dual Convolutional Block with Batch Normalization for feature stabilization."""
     def __init__(self, in_channels, out_channels):
-        super(UNetDownsample, self).__init__()
+        super(ConvBlock, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(out_channels),
-            nn.LeakyReLU(0.2, inplace=True)
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True)
         )
+
     def forward(self, x):
         return self.conv(x)
 
-class UNetUpsample(nn.Module):
-    """Upsampling block: Transposed Convolution -> Batch Normalization -> Dropout -> ReLU"""
-    def __init__(self, in_channels, out_channels, use_dropout=False):
-        super(UNetUpsample, self).__init__()
-        modules = [
-            nn.ConvTranspose2d(in_channels, out_channels, kernel_size=4, stride=2, padding=1, bias=False),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True)
-        ]
-        if use_dropout:
-            modules.append(nn.Dropout(0.5))
-        self.up = nn.Sequential(*modules)
-
-    def forward(self, x):
-        return self.up(x)
-
-class CloudRemovalGenerator(nn.Module):
+class SatelliteCloudRemovalUNet(nn.Module):
     """
-    U-Net Generator Core Architecture.
-    Takes cloudy multi-sensor stacks and reconstructs clean imagery.
+    U-Net Generative Architecture for Satellite Image Cloud Removal.
     """
-    def __init__(self, in_channels=1, out_channels=1):
-        super(CloudRemovalGenerator, self).__init__()
+    def __init__(self, in_channels=3, out_channels=3):
+        super(SatelliteCloudRemovalUNet, self).__init__()
         
-        # Encoder (Downsampling path)
-        self.down1 = nn.Sequential(
-            nn.Conv2d(in_channels, 64, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2, inplace=True)
-        ) # Out: 64 x H/2 x W/2
-        self.down2 = UNetDownsample(64, 128)  # Out: 128 x H/4 x W/4
-        self.down3 = UNetDownsample(128, 256) # Out: 256 x H/8 x W/8
-        self.down4 = UNetDownsample(256, 512) # Out: 512 x H/16 x W/16
-
-        # Decoder (Upsampling path with Skip Connections)
-        self.up1 = UNetUpsample(512, 256, use_dropout=True)  # Out: 256 x H/8 x W/8
-        self.up2 = UNetUpsample(512, 128)                    # Input has doubled via skip connection concat
-        self.up3 = UNetUpsample(256, 64)                     
+        # Encoder (Downsampling Stream)
+        self.inc = ConvBlock(in_channels, 64)
+        self.down1 = nn.Sequential(nn.MaxPool2d(2), ConvBlock(64, 128))
+        self.down2 = nn.Sequential(nn.MaxPool2d(2), ConvBlock(128, 256))
+        self.down3 = nn.Sequential(nn.MaxPool2d(2), ConvBlock(256, 512))
         
-        # Final reconstruction layer mapping back to original resolution and band count
-        self.final = nn.Sequential(
-            nn.ConvTranspose2d(128, out_channels, kernel_size=4, stride=2, padding=1),
-            nn.Tanh() # Scales output imagery cleanly to active color/reflectance spectral range
+        # Decoder (Upsampling Stream)
+        self.up1 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
+        self.conv_up1 = ConvBlock(512, 256)
+        
+        self.up2 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
+        self.conv_up2 = ConvBlock(256, 128)
+        
+        self.up3 = nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2)
+        self.conv_up3 = ConvBlock(128, 64)
+        
+        # Final Projection Layer
+        self.outc = nn.Sequential(
+            nn.Conv2d(64, out_channels, kernel_size=1),
+            nn.Tanh()
         )
 
     def forward(self, x):
-        # Forward pass through encoder
-        d1 = self.down1(x)
-        d2 = self.down2(d1)
-        d3 = self.down3(d2)
-        d4 = self.down4(d3)
+        x1 = self.inc(x)
+        x2 = self.down1(x1)
+        x3 = self.down2(x2)
+        x4 = self.down3(x3)
         
-        # Forward pass through decoder with explicit feature concatenation (Skip Connections)
-        u1 = self.up1(d4)
-        u1_conn = torch.cat([u1, d3], dim=1)
+        d1 = self.up1(x4)
+        d1_fused = torch.cat([d1, x3], dim=1)
+        d1_out = self.conv_up1(d1_fused)
         
-        u2 = self.up2(u1_conn)
-        u2_conn = torch.cat([u2, d2], dim=1)
+        d2 = self.up2(d1_out)
+        d2_fused = torch.cat([d2, x2], dim=1)
+        d2_out = self.conv_up2(d2_fused)
         
-        u3 = self.up3(u2_conn)
-        u3_conn = torch.cat([u3, d1], dim=1)
+        d3 = self.up3(d2_out)
+        d3_fused = torch.cat([d3, x1], dim=1)
+        d3_out = self.conv_up3(d3_fused)
         
-        return self.final(u3_conn)
-
-if __name__ == "__main__":
-    # Model execution shape simulation test
-    print("Initializing Generator Architecture configurations...")
-    model = CloudRemovalGenerator(in_channels=1, out_channels=1)
-    
-    # Simulating a dynamic network feed: [Batch Size, Channels, Height, Width]
-    # Forcing a 256x256 patch size structure to verify down/up matching
-    simulated_input = torch.randn(1, 1, 256, 256)
-    
-    try:
-        output_tensor = model(simulated_input)
-        print("\n=== SUCCESS: AI Model Initialization & Compiling ===")
-        print(f"Input Matrix Profile : {simulated_input.shape}")
-        print(f"Output Generated Profile: {output_tensor.shape} -> Match Verified!")
-    except Exception as e:
-        print(f"Network Compilation Failure: {e}")
+        return self.outc(d3_out)
