@@ -163,3 +163,9 @@ data/
 venv/
 env/
 __pycache__/
+datasets/
+data/
+data.zip
+*.zip
+*.pth
+*.npy
